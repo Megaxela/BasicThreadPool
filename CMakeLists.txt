@@ -1,7 +1,9 @@
-cmake_minimum_required(VERSION 3.9)
-project(ThreadWorkersPool)
+cmake_minimum_required(VERSION 3.5)
+project(BasicThreadPool)
 
 set(CMAKE_CXX_STANDARD 11)
+
+option(BASICTHREADPOOL_BUILD_TESTS "Build tests" OFF)
 
 include_directories(include)
 
@@ -17,8 +19,12 @@ set(SOURCE_FILES
         src/Job.cpp
 )
 
-add_library(ThreadWorkersPool
+if (${BASICTHREADPOOL_BUILD_TESTS})
+    add_subdirectory(tests)
+endif()
+
+add_library(BasicThreadPool
     ${INCLUDE_FILES}
     ${SOURCE_FILES}
 )
-target_link_libraries(ThreadWorkersPool -pthread)
+target_link_libraries(BasicThreadPool -pthread)

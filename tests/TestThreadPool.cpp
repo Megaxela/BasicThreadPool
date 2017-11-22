@@ -81,5 +81,51 @@ TEST(ThreadPool, InfiniteJob)
         std::chrono::milliseconds(1000)
     );
 
-    ASSERT_GT(value, 100);
+    pool.removeJob(id);
+
+    auto copy = value;
+
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(1000)
+    );
+
+    ASSERT_GT(value, copy);
+}
+
+static Job::Result resultLessCounter2(int& counter)
+{
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(1000)
+    );
+
+    counter += 100;
+}
+
+TEST(ThreadPool, RemovingInfiniteJob)
+{
+    ThreadPool pool(std::thread::hardware_concurrency());
+
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(500)
+    );
+
+    int value = 0;
+
+    auto id = pool.addInfiniteJob(
+        Job(std::bind(resultLessCounter, std::ref(value)))
+    );
+
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(500)
+    );
+
+    pool.removeJob(id);
+
+    auto copy = value;
+
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(3000)
+    );
+
+    ASSERT_GT(value, copy);
 }

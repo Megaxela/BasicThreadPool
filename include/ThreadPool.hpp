@@ -133,7 +133,7 @@ private:
     std::condition_variable m_jobsCondition;
     mutable std::mutex m_jobsMutex;
 
-    uint32_t m_indexCounter;
+    Job::Index m_indexCounter;
     std::mutex m_indexMutex;
 };
 

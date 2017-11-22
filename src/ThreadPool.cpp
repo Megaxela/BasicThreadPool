@@ -9,7 +9,13 @@
 #include "ThreadPool.hpp"
 
 ThreadPool::ThreadPool(uint32_t threads) :
-    m_threadContainer()
+    m_threadContainer(),
+    m_threadMutex(),
+    m_jobs(),
+    m_jobsCondition(),
+    m_jobsMutex(),
+    m_indexCounter(0),
+    m_indexMutex()
 {
     changeNumberOfThreads(threads);
 }
@@ -28,7 +34,9 @@ void ThreadPool::changeNumberOfThreads(uint32_t threads)
         auto difference = m_threadContainer.size() - threads;
 
         // Disabling threads
-        for (auto i = 0; i < difference; ++i)
+        for (decltype(difference) i = 0;
+             i < difference;
+             ++i)
         {
             m_threadContainer[m_threadContainer.size() - i - 1].running = false;
         }
@@ -38,7 +46,9 @@ void ThreadPool::changeNumberOfThreads(uint32_t threads)
         // Waiting for threads to end
         lock.unlock();
 
-        for (auto i = 0; i < difference; ++i)
+        for (decltype(difference) i = 0;
+             i < difference;
+             ++i)
         {
             if (m_threadContainer[m_threadContainer.size() - i - 1].thread.joinable())
             {
@@ -59,7 +69,9 @@ void ThreadPool::changeNumberOfThreads(uint32_t threads)
         // Adding new threads
         auto difference = threads - m_threadContainer.size();
 
-        for (auto i = 0; i < difference; ++i)
+        for (decltype(difference) i = 0;
+             i < difference;
+             ++i)
         {
             m_threadContainer.emplace_back(
                 std::thread(&ThreadPool::workerThread, this, m_threadContainer.size())

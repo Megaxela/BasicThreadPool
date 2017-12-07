@@ -3,6 +3,8 @@ project(BasicThreadPool)
 
 set(CMAKE_CXX_STANDARD 11)
 
+#set(CMAKE_CXX_FLAGS -pg)
+
 option(BASICTHREADPOOL_BUILD_TESTS "Build tests" OFF)
 
 include_directories(include)

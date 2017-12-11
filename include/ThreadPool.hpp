@@ -9,21 +9,70 @@
 #include <functional>
 #include <deque>
 #include <mutex>
+#include <shared_mutex>
 #include "JobResult.hpp"
 #include "Job.hpp"
+#include <ringbuffer.hpp>
 
 /**
  * @brief Main thread pool class.
  */
 class ThreadPool
 {
+
+    /**
+     * @brief Container for job.
+     */
+    struct JobContainer
+    {
+        JobContainer() :
+            job(),
+            isInfinite(false),
+            result()
+        {}
+
+        JobContainer(Job j, bool isInfinite) :
+            job(std::move(j)),
+            isInfinite(isInfinite),
+            result()
+        {}
+
+        JobContainer(Job j, JobResult result) :
+            job(std::move(j)),
+            isInfinite(false),
+            result(std::move(result))
+        {}
+
+        Job job{};
+        bool isInfinite;
+        JobResult result{};
+    };
+
+    struct ThreadContainer
+    {
+        ThreadContainer() :
+            thread(),
+            running(false)
+        {}
+
+        explicit ThreadContainer(std::thread thread) :
+            thread(std::move(thread)),
+            running(true)
+        {}
+
+        std::thread thread;
+        bool running;
+    };
+
 public:
+
+    using JobsContainer = ringbuffer<JobContainer>;
 
     /**
      * @brief Constructor.
      * @param threads Number of threads.
      */
-    explicit ThreadPool(uint32_t threads=1);
+    explicit ThreadPool(uint32_t threads=1, JobsContainer::size_type maxElements=1024);
 
     /**
      * @brief Destructor.
@@ -82,55 +131,11 @@ private:
      */
     void workerThread(int index);
 
-    /**
-     * @brief Container for job.
-     */
-    struct JobContainer
-    {
-        JobContainer() :
-            job(),
-            isInfinite(false),
-            result()
-        {}
-
-        JobContainer(Job j, bool isInfinite) :
-            job(std::move(j)),
-            isInfinite(isInfinite),
-            result()
-        {}
-
-        JobContainer(Job j, JobResult result) :
-            job(std::move(j)),
-            isInfinite(false),
-            result(std::move(result))
-        {}
-
-        Job job{};
-        bool isInfinite;
-        JobResult result{};
-    };
-
-    struct ThreadContainer
-    {
-        ThreadContainer() :
-            thread(),
-            running(false)
-        {}
-
-        explicit ThreadContainer(std::thread thread) :
-            thread(std::move(thread)),
-            running(true)
-        {}
-
-        std::thread thread;
-        bool running;
-    };
-
     std::vector<ThreadContainer> m_threadContainer;
-    mutable std::mutex m_threadMutex;
+    mutable std::shared_mutex m_threadMutex;
 
-    std::deque<JobContainer> m_jobs;
-    std::condition_variable m_jobsCondition;
+    JobsContainer m_jobs;
+    std::condition_variable_any m_jobsCondition;
     mutable std::mutex m_jobsMutex;
 
     Job::Index m_indexCounter;

@@ -65,6 +65,8 @@ static Job::Result resultLessCounter(int& counter)
     );
 
     counter += 100;
+
+    return nullptr;
 }
 
 TEST(ThreadPool, InfiniteJob)
@@ -99,6 +101,8 @@ static Job::Result resultLessCounter2(int& counter)
     );
 
     counter += 100;
+
+    return nullptr;
 }
 
 TEST(ThreadPool, RemovingInfiniteJob)

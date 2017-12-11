@@ -8,7 +8,7 @@
 
 #include "ThreadPool.hpp"
 
-ThreadPool::ThreadPool(uint32_t threads) :
+ThreadPool::ThreadPool(uint32_t threads, JobsContainer::size_type maxElements) :
     m_threadContainer(),
     m_threadMutex(),
     m_jobs(),
@@ -17,6 +17,7 @@ ThreadPool::ThreadPool(uint32_t threads) :
     m_indexCounter(0),
     m_indexMutex()
 {
+    m_jobs.reserve(maxElements);
     changeNumberOfThreads(threads);
 }
 
@@ -27,7 +28,7 @@ ThreadPool::~ThreadPool()
 
 void ThreadPool::changeNumberOfThreads(uint32_t threads)
 {
-    std::unique_lock<std::mutex> lock(m_threadMutex);
+    std::unique_lock<std::shared_mutex> lock(m_threadMutex);
     if (m_threadContainer.size()  > threads)
     {
         // Removing threads
@@ -82,7 +83,7 @@ void ThreadPool::changeNumberOfThreads(uint32_t threads)
 
 uint32_t ThreadPool::numberOfThreads() const
 {
-    std::unique_lock<std::mutex> lock(m_threadMutex);
+    std::shared_lock<std::shared_mutex> lock(m_threadMutex);
     return static_cast<uint32_t>(m_threadContainer.size());
 }
 
@@ -101,7 +102,7 @@ JobResult ThreadPool::addJob(Job job)
         m_jobs.emplace_back(job, result);
     }
 
-    m_jobsCondition.notify_all();
+    m_jobsCondition.notify_one();
 
     return result;
 }
@@ -118,7 +119,7 @@ Job::Index ThreadPool::addInfiniteJob(Job job)
         m_jobs.emplace_back(job, true);
     }
 
-    m_jobsCondition.notify_all();
+    m_jobsCondition.notify_one();
 
     return job.index();
 }
@@ -162,7 +163,7 @@ bool ThreadPool::containsJob(Job::Index index) const
 
 void ThreadPool::workerThread(int index)
 {
-    std::unique_lock<std::mutex> threadLock(m_threadMutex);
+    std::shared_lock<std::shared_mutex> threadLock(m_threadMutex);
 
     while (m_threadContainer[index].running)
     {
@@ -175,6 +176,7 @@ void ThreadPool::workerThread(int index)
             std::unique_lock<std::mutex> jobsLock(m_jobsMutex);
 
             threadLock.lock();
+
             // If there is no jobs, going to sleep.
             while (m_jobs.empty() &&
                    m_threadContainer[index].running)
@@ -188,12 +190,13 @@ void ThreadPool::workerThread(int index)
 
             if (!m_threadContainer[index].running)
             {
-                return;
+                break;
             }
 
             threadLock.unlock();
 
             // When wake up, take that job and execute it
+
             jobContainer = m_jobs.front();
             m_jobs.pop_front();
         }
@@ -205,14 +208,14 @@ void ThreadPool::workerThread(int index)
 
             jobContainer.job.function()();
 
-            std::unique_lock<std::mutex> jobsLock(m_jobsMutex);
+            m_jobsMutex.lock();
             m_jobs.push_back(jobContainer);
+            m_jobsMutex.unlock();
         }
         else
         {
             // If it's not infinite, execute and update JobResult
             // object
-
             jobContainer.result.m_impl->set(jobContainer.job.function()());
         }
 

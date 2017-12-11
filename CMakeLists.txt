@@ -1,13 +1,16 @@
 cmake_minimum_required(VERSION 3.5)
 project(BasicThreadPool)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 #set(CMAKE_CXX_FLAGS -pg)
 
 option(BASICTHREADPOOL_BUILD_TESTS "Build tests" OFF)
 
+add_subdirectory(libraries/STLRoundBuffer)
+
 include_directories(include)
+include_directories(libraries/STLRoundBuffer/include)
 
 set(INCLUDE_FILES
         include/ThreadPool.hpp

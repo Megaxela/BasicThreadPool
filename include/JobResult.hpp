@@ -24,7 +24,7 @@ public:
      * @brief Constructor from job object.
      * @param job Job object.
      */
-    JobResult(const Job &job);
+    explicit JobResult(const Job &job);
 
     /**
      * @brief Method for waiting until worker thread
@@ -52,6 +52,8 @@ public:
             waitForResult();
             return *m_impl->get<T>();
         }
+
+        return T(0);
     }
 
 private:

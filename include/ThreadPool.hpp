@@ -138,6 +138,9 @@ private:
     std::condition_variable_any m_jobsCondition;
     mutable std::mutex m_jobsMutex;
 
+    ringbuffer<Job::Index> m_removedJobs;
+    mutable std::mutex m_removedJobsMutex;
+
     Job::Index m_indexCounter;
     std::mutex m_indexMutex;
 };

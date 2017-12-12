@@ -18,6 +18,7 @@ ThreadPool::ThreadPool(uint32_t threads, JobsContainer::size_type maxElements) :
     m_indexMutex()
 {
     m_jobs.reserve(maxElements);
+    m_removedJobs.reserve(maxElements);
     changeNumberOfThreads(threads);
 }
 
@@ -199,6 +200,22 @@ void ThreadPool::workerThread(int index)
 
             jobContainer = m_jobs.front();
             m_jobs.pop_front();
+        }
+
+        // Checking is this job removed
+        {
+            std::unique_lock<std::mutex> lock(m_removedJobsMutex);
+            auto searchResult = std::find(
+                m_removedJobs.begin(),
+                m_removedJobs.end(),
+                jobContainer.job.index()
+            );
+
+            if (searchResult != m_removedJobs.end())
+            {
+                m_removedJobs.erase(searchResult);
+                continue;
+            }
         }
 
         if (jobContainer.isInfinite)

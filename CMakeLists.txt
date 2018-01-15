@@ -12,7 +12,6 @@ if (EXISTS "${CMAKE_CURRENT_LIST_DIR}/libraries/STLRoundBuffer/CMakeLists.txt")
 endif()
 
 include_directories(include)
-include_directories(libraries/STLRoundBuffer/include)
 
 set(INCLUDE_FILES
         include/ThreadPool.hpp
@@ -34,4 +33,8 @@ add_library(BasicThreadPool
     ${INCLUDE_FILES}
     ${SOURCE_FILES}
 )
-target_link_libraries(BasicThreadPool -pthread)
+target_link_libraries(
+        BasicThreadPool
+        STLRoundBuffer
+        -pthread
+)

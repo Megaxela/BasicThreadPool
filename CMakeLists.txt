@@ -7,7 +7,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 option(BASICTHREADPOOL_BUILD_TESTS "Build tests" OFF)
 
-add_subdirectory(libraries/STLRoundBuffer)
+if (EXISTS "${CMAKE_CURRENT_LIST_DIR}/libraries/STLRoundBuffer/CMakeLists.txt")
+    add_subdirectory(libraries/STLRoundBuffer)
+endif()
 
 include_directories(include)
 include_directories(libraries/STLRoundBuffer/include)

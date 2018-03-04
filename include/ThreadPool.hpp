@@ -13,6 +13,7 @@
 #include "JobResult.hpp"
 #include "Job.hpp"
 #include <ringbuffer.hpp>
+#include <list>
 
 /**
  * @brief Main thread pool class.
@@ -66,13 +67,15 @@ class ThreadPool
 
 public:
 
-    using JobsContainer = ringbuffer<JobContainer>;
+    static const std::size_t MaxElements = 1024;
+
+    using JobsContainer = ringbuffer<JobContainer, MaxElements>;
 
     /**
      * @brief Constructor.
      * @param threads Number of threads.
      */
-    explicit ThreadPool(uint32_t threads=1, JobsContainer::size_type maxElements=1024);
+    explicit ThreadPool(uint32_t threads=1);
 
     /**
      * @brief Destructor.
@@ -138,7 +141,7 @@ private:
     std::condition_variable_any m_jobsCondition;
     mutable std::mutex m_jobsMutex;
 
-    ringbuffer<Job::Index> m_removedJobs;
+    std::list<Job::Index> m_removedJobs;
     mutable std::mutex m_removedJobsMutex;
 
     Job::Index m_indexCounter;

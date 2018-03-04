@@ -8,17 +8,17 @@
 
 #include "ThreadPool.hpp"
 
-ThreadPool::ThreadPool(uint32_t threads, JobsContainer::size_type maxElements) :
+ThreadPool::ThreadPool(uint32_t threads) :
     m_threadContainer(),
     m_threadMutex(),
     m_jobs(),
     m_jobsCondition(),
     m_jobsMutex(),
+    m_removedJobs(),
+    m_removedJobsMutex(),
     m_indexCounter(0),
     m_indexMutex()
 {
-    m_jobs.reserve(maxElements);
-    m_removedJobs.reserve(maxElements);
     changeNumberOfThreads(threads);
 }
 

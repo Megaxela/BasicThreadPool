@@ -8,17 +8,15 @@
 
 #include "ThreadPool.hpp"
 
-ThreadPool::ThreadPool(uint32_t threads, JobsContainer::size_type maxElements) :
+ThreadPool::ThreadPool(uint32_t threads) :
     m_threadContainer(),
     m_threadMutex(),
     m_jobs(),
     m_jobsCondition(),
     m_jobsMutex(),
-    m_indexCounter(0),
+    m_indexCounter(1),
     m_indexMutex()
 {
-    m_jobs.reserve(maxElements);
-    m_removedJobs.reserve(maxElements);
     changeNumberOfThreads(threads);
 }
 
@@ -129,21 +127,7 @@ void ThreadPool::removeJob(Job::Index index)
 {
     std::unique_lock<std::mutex> lock(m_jobsMutex);
 
-    auto result = std::find_if(
-        m_jobs.begin(),
-        m_jobs.end(),
-        [index](const JobContainer& c)
-        {
-            return c.job.index() == index;
-        }
-    );
-
-    if (result == m_jobs.end())
-    {
-        return;
-    }
-
-    m_jobs.erase(result);
+    m_removedJobs.push_back(index);
 }
 
 bool ThreadPool::containsJob(Job::Index index) const
@@ -214,6 +198,7 @@ void ThreadPool::workerThread(int index)
             if (searchResult != m_removedJobs.end())
             {
                 m_removedJobs.erase(searchResult);
+                threadLock.lock();
                 continue;
             }
         }

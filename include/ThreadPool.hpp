@@ -66,13 +66,13 @@ class ThreadPool
 
 public:
 
-    using JobsContainer = ringbuffer<JobContainer>;
+    using JobsContainer = ringbuffer<JobContainer, 512>;
 
     /**
      * @brief Constructor.
      * @param threads Number of threads.
      */
-    explicit ThreadPool(uint32_t threads=1, JobsContainer::size_type maxElements=1024);
+    explicit ThreadPool(uint32_t threads=1);
 
     /**
      * @brief Destructor.
@@ -138,7 +138,7 @@ private:
     std::condition_variable_any m_jobsCondition;
     mutable std::mutex m_jobsMutex;
 
-    ringbuffer<Job::Index> m_removedJobs;
+    std::vector<Job::Index> m_removedJobs;
     mutable std::mutex m_removedJobsMutex;
 
     Job::Index m_indexCounter;

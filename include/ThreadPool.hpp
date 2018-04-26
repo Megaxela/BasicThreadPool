@@ -13,6 +13,7 @@
 #include "JobResult.hpp"
 #include "Job.hpp"
 #include <ringbuffer.hpp>
+#include <list>
 
 /**
  * @brief Main thread pool class.
@@ -66,7 +67,9 @@ class ThreadPool
 
 public:
 
-    using JobsContainer = ringbuffer<JobContainer, 512>;
+    static const std::size_t MaxElements = 1024;
+
+    using JobsContainer = ringbuffer<JobContainer, MaxElements>;
 
     /**
      * @brief Constructor.

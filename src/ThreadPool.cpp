@@ -14,6 +14,8 @@ ThreadPool::ThreadPool(uint32_t threads) :
     m_jobs(),
     m_jobsCondition(),
     m_jobsMutex(),
+    m_removedJobs(),
+    m_removedJobsMutex(),
     m_indexCounter(1),
     m_indexMutex()
 {
